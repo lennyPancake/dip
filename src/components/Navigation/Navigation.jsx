@@ -1,19 +1,24 @@
 import { useMetaMask } from "../../hooks/useMetaMask";
 import { formatAddress } from "../../utils";
 import styles from "./Navigation.module.css";
-
+import { quitWallet } from "../../hooks/useMetaMask";
 export const Navigation = () => {
   const { wallet, hasProvider, isConnecting, connectMetaMask } = useMetaMask();
 
   return (
     <div className={styles.navigation}>
       <div className={styles.flexContainer}>
-        <div className={styles.leftNav}>Vite + React & MetaMask</div>
+        <div className={styles.leftNav}>Система электронных голосований</div>
         <div className={styles.rightNav}>
           {!hasProvider && (
             <a href="https://metamask.io" target="_blank" rel="noreferrer">
               Install MetaMask
             </a>
+          )}
+          {!(window.ethereum?.isMetaMask && wallet.accounts.length < 1) && (
+            <button id="disconnectButton" onClick={quitWallet}>
+              Disconnect from DApp
+            </button>
           )}
           {window.ethereum?.isMetaMask && wallet.accounts.length < 1 && (
             <button disabled={isConnecting} onClick={connectMetaMask}>

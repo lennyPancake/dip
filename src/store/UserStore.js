@@ -2,11 +2,8 @@ import { makeAutoObservable } from "mobx";
 class UserStore {
   users = [];
   mainUser = {
-    id: null,
-    first_name: "",
-    last_name: "",
+    name: "",
     email: "",
-    password: "",
   };
   isLoading = false;
 
@@ -14,22 +11,6 @@ class UserStore {
     makeAutoObservable(this);
     this.isLoading = false;
   }
-  getUser(id) {
-    return this.users.find((user) => user.id === id);
-  }
-
-  //   async fetchUsers() {
-  //     try {
-  //       this.isLoading = true;
-  //       const res = await getUsers();
-  //       console.log("полученные пользователи", res.data); //?
-  //       this.users = res.data;
-  //     } catch (error) {
-  //       console.error("Error fetching users:", error);
-  //     } finally {
-  //       this.isLoading = false;
-  //     }
-  //   }
 }
 
 export default UserStore;

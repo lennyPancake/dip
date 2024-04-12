@@ -1,4 +1,5 @@
 module.exports = {
+  contracts_directory: "./contracts",
   networks: {
     development: {
       host: "127.0.0.1",
@@ -13,5 +14,13 @@ module.exports = {
         runs: 200,
       },
     },
+  },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts",
+    // Добавьте путь к контрактам OpenZeppelin
+    contracts: "./node_modules/@openzeppelin/contracts/token/ERC20",
   },
 };

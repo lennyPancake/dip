@@ -36,7 +36,7 @@ button {
   display: inline-block;
   line-height: 36px;
   height: 36px;
-  background: linear-gradient(to right, #111111, #033b16);
+  background: linear-gradient(to right, #e9e5e5, #49ff86);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
