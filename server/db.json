@@ -1,1 +1,12 @@
-{"users":[{"walletId":"0x2a493187242e2c8e16b0a355c0d803f54a9dc8ef","userName":null}]}
+{
+  "users": [
+    {
+      "walletId": "0x2a493187242e2c8e16b0a355c0d803f54a9dc8ef",
+      "userName": null
+    },
+    {
+      "walletId": "0x6b9f8d107aa1254f0b4aa6382e029ea912095178",
+      "userName": "kvadrat"
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Navb from "./components/Navb";
 import Home from "./pages/Home";
 import { Navigation } from "./components/Navigation";
+import "bootstrap/dist/css/bootstrap.min.css";
 import { MetaMaskError } from "./components/MetamaskError";
 import "./App.css";
 

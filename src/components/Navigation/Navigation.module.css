@@ -1,51 +1,13 @@
-.navigation {
-  /* calculated height: 68 px */
-  /* border: 1px solid rgb(214, 43, 226); */
-  height: 36px;
-  padding: 16px;
-  background-color: rgb(42, 58, 11);
-  color: #fff;
-}
 button {
   color: #000000;
   padding: 0.3em 0.7em;
   font-size: 1em;
-  border-radius: 8px;
+  border-radius: 20px !important;
   border: 1px solid transparent;
   font-weight: 500;
   font-family: inherit;
   background-color: rgb(140, 196, 33);
+  margin-right: 10px;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-.flexContainer {
-  display: flex;
-  align-self: flex-end;
-  flex-direction: row;
-  min-width: calc(100vw -2em);
-  gap: 0em;
-  row-gap: 0em;
-}
-
-.flexItem {
-  width: 50%;
-}
-
-.leftNav {
-  display: block;
-  display: inline-block;
-  line-height: 36px;
-  height: 36px;
-  background: linear-gradient(to right, #e9e5e5, #49ff86);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.rightNav {
-  color: #ddd;
-  margin-left: auto;
-  line-height: 36px;
-  height: 36px;
-  width: auto;
 }

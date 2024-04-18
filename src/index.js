@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import { createContext } from "react";
-import UserStore from "./store/userStore";
+import UserStore from "./store/UserStore";
 import { MetaMaskContextProvider } from "./hooks/useMetaMask";
 
 export const RootStoreContext = createContext();
