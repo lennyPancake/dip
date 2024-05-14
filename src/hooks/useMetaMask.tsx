@@ -10,6 +10,8 @@ import {
 import React from "react";
 import detectEthereumProvider from "@metamask/detect-provider";
 import { formatBalance } from "../utils";
+import Web3 from "web3";
+import { signTransaction } from "web3/lib/commonjs/eth.exports";
 
 interface WalletState {
   accounts: any[];
@@ -75,11 +77,57 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
     () => _updateWallet(),
     [_updateWallet]
   );
+
   const updateWallet = useCallback(
     (accounts: any) => _updateWallet(accounts),
     [_updateWallet]
   );
+  const handleSignMessage = async () => {
+    if (window.ethereum) {
+      const web3 = new Web3(window.ethereum);
+      const accounts = await web3.eth.requestAccounts();
+      const selectedAddress = accounts[0];
 
+      // Генерация сообщения для подписи
+      const message =
+        "Confirm authorization in voting system with your wallet:" +
+        selectedAddress;
+
+      try {
+        // Отправка сообщения на подпись
+        const signature = await web3.eth.personal.sign(
+          message,
+          selectedAddress,
+          ""
+        );
+
+        // Отправка подписи на ваш сервер
+        fetch("http://localhost:5000/signature-verification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message,
+            signature,
+            walletAddress: selectedAddress,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // Обработка ответа сервера
+            console.log(data);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    } else {
+      console.error("MetaMask not detected.");
+    }
+  };
   /**
    * This logic checks if MetaMask is installed. If it is, then we setup some
    * event handlers to update the wallet state when MetaMask changes. The function
@@ -105,16 +153,37 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
       window.ethereum?.removeListener("chainChanged", updateWalletAndAccounts);
     };
   }, [updateWallet, updateWalletAndAccounts]);
-
   const connectMetaMask = async () => {
     setIsConnecting(true);
-
     try {
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
       clearError();
       updateWallet(accounts);
+      handleSignMessage();
+      // Получение имени пользователя
+      //const userName = prompt("Please enter your username");
+
+      // Отправка данных на сервер
+      fetch("http://localhost:5000/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          walletId: accounts[0],
+          userName: null,
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => console.log("User was added:", data))
+        .catch((error) => console.error("Error:", error));
     } catch (err: any) {
       setErrorMessage(err.message);
     }
@@ -138,6 +207,27 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
   );
 };
 
+export const quitWallet = async () => {
+  if (window.ethereum) {
+    const web3 = new Web3(window.ethereum);
+    try {
+      await window.ethereum.request({
+        method: "wallet_revokePermissions",
+        params: [
+          {
+            eth_accounts: {},
+          },
+        ],
+      });
+      alert("Successfully disconnected from DApp.");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to disconnect from DApp.");
+    }
+  } else {
+    alert("MetaMask is not installed or not connected.");
+  }
+};
 export const useMetaMask = () => {
   const context = useContext(MetaMaskContext);
   if (context === undefined) {

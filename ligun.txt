@@ -1,0 +1,119 @@
+import React, { useContext, useState } from "react";
+import { RootStoreContext } from "..";
+import { Button, Container, Form } from "react-bootstrap";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import Web3 from "web3";
+import { CONTACT_ABI, CONTACT_ADDRESS } from "../config";
+import "./Login.css";
+import detectEthereumProvider from "@metamask/detect-provider";
+import { formatBalance, formatChainAsNum } from "../utils/index";
+import styles from "../App.module.css";
+import { Navigation } from "../components/Navigation";
+import { Display } from "../components/Display";
+import { MetaMaskError } from "../components/MetamaskError/index.jsx";
+import { MetaMaskContextProvider } from "../hooks/useMetaMask";
+let injectedProvider = false;
+
+if (typeof window.ethereum !== "undefined") {
+  injectedProvider = true;
+  console.log(window.ethereum);
+}
+
+const isMetaMask = injectedProvider ? window.ethereum.isMetaMask : false;
+
+const Login = () => {
+  const [account, setAccount] = useState();
+  const [contactList, setContactList] = useState();
+  const [contacts, setContacts] = useState([]);
+  const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  useEffect(() => {
+    async function load() {
+      const web3 = new Web3(Web3.givenProvider || "http://localhost:7545");
+
+      const accounts = await web3.eth.getAccounts();
+      setAccount(accounts[0]);
+      // Instantiate smart contract using ABI and address.
+      const contactList = new web3.eth.Contract(CONTACT_ABI, CONTACT_ADDRESS);
+      // set contact list to state variable.
+      setContactList(contactList);
+      // Then we get total number of contacts for iteration
+      const counter = await contactList.methods.count().call();
+      // iterate through the amount of time of counter
+      for (var i = 1; i <= counter; i++) {
+        // call the contacts method to get that particular contact from smart contract
+        const contact = await contactList.methods.contacts(i).call();
+        // add recently fetched contact to state variable.
+        setContacts((contacts) => [...contacts, contact]);
+      }
+    }
+
+    load();
+  }, []);
+  const addContactWithMetaMask = async () => {
+    const web3 = new Web3(Web3.givenProvider || "http://localhost:7545");
+    const contract = contactList;
+
+    try {
+      // Подготовка данных для вызова функции контракта
+      const data = contract.methods.createContact(name, phone).encodeABI();
+
+      // Отправляем транзакцию с помощью MetaMask
+      await window.ethereum.request({
+        method: "eth_sendTransaction",
+        params: [
+          {
+            from: account,
+            to: contract.options.address,
+            data: data,
+          },
+        ],
+      });
+
+      // Если транзакция успешно отправлена, выводим сообщение
+      alert("Транзакция успешно отправлена!");
+    } catch (error) {
+      // Обработка ошибок
+      console.error("Ошибка отправки транзакции:", error);
+      alert("Ошибка отправки транзакции: " + error.message);
+    }
+  };
+  return (
+    <div>
+      <div>
+        Your account is: {account}
+        <h1>Contacts</h1>
+        <ul>
+          {Object.keys(contacts).map((contact, index) => (
+            <li key={`${contacts[index].name}-${index}`}>
+              <h4>{contacts[index].name}</h4>
+              <span>
+                <b>Phone: </b>
+                {contacts[index].phone}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <h1>Add Contact</h1>
+        <label for="name">Name:</label>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          type="text"
+          id="name"
+        />
+        <label for="phone">Phone:</label>
+        <input
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          type="text"
+          id="phone"
+        />
+        <button onClick={addContactWithMetaMask}>Add Contact</button>
+      </div>
+    </div>
+  );
+};
+
+export default Login;

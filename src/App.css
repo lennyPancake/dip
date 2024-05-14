@@ -1,0 +1,9 @@
+body {
+  background-color: #212121;
+}
+.appContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-width: 100%;
+}
