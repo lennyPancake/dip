@@ -8,5 +8,24 @@
       "walletId": "0x6b9f8d107aa1254f0b4aa6382e029ea912095178",
       "userName": "kvadrat"
     }
+  ],
+  "votes": [
+    {
+      "id": 1,
+      "question": "Вопрос для голосования?",
+      "choices": [
+        {
+          "id": 1,
+          "text": "Да"
+        },
+        {
+          "id": 2,
+          "text": "Нет"
+        }
+      ],
+      "startDate": "11.09.2023",
+      "endDate": "12.09.2024",
+      "finished": "No"
+    }
   ]
 }

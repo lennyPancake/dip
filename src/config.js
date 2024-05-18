@@ -1,73 +1,65 @@
-export const CONTACT_ADDRESS = "0xd89b1F81e72f02f569E86E52990cAB1E3634faac";
+export const VOTING_ADDRESS = "0x5b6FC71ef7aA592F4b11B7E625Ffe18b33F4794b";
 
-export const CONTACT_ABI = [
-  {
-    constant: true,
-    inputs: [],
-    name: "count",
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-      },
-    ],
-    payable: false,
-    stateMutability: "view",
-    type: "function",
-    signature: "0x06661abd",
-  },
+export const VOTING_ABI = [
   {
     constant: true,
     inputs: [
       {
+        internalType: "uint256",
         name: "",
         type: "uint256",
       },
     ],
-    name: "contacts",
+    name: "votingSessions",
     outputs: [
       {
+        internalType: "uint256",
         name: "id",
         type: "uint256",
       },
       {
+        internalType: "string",
         name: "name",
         type: "string",
       },
       {
-        name: "phone",
-        type: "string",
+        internalType: "uint256",
+        name: "endDate",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "isActive",
+        type: "bool",
       },
     ],
     payable: false,
     stateMutability: "view",
     type: "function",
-    signature: "0xe0f478cb",
-  },
-  {
-    inputs: [],
-    payable: false,
-    stateMutability: "nonpayable",
-    type: "constructor",
-    signature: "constructor",
   },
   {
     constant: false,
     inputs: [
       {
+        internalType: "string",
         name: "_name",
         type: "string",
       },
       {
-        name: "_phone",
-        type: "string",
+        internalType: "string[]",
+        name: "_options",
+        type: "string[]",
+      },
+      {
+        internalType: "uint256",
+        name: "_endDate",
+        type: "uint256",
       },
     ],
-    name: "createContact",
+    name: "createVoting",
     outputs: [],
     payable: false,
     stateMutability: "nonpayable",
     type: "function",
-    signature: "0x3dce4920",
   },
 ];

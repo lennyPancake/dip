@@ -21,4 +21,4 @@ contract Contacts {
     count++;
     contacts[count] = Contact(count, _name, _phone);
   }
-}
+} 

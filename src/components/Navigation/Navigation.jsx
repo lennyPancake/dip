@@ -14,13 +14,13 @@ export const Navigation = () => {
     <Navbar className="p-3" style={customColor}>
       <Container>
         <Nav className="me-auto">
-          <Nav.Link className="text-white" href="#home">
+          <Nav.Link className="text-white" href="/list">
             Список голосований
           </Nav.Link>
-          <Nav.Link className="text-white" href="#features">
+          <Nav.Link className="text-white" href="/profile">
             Профиль
           </Nav.Link>
-          <Nav.Link className="text-white" href="#pricing">
+          <Nav.Link className="text-white" href="/create">
             Создать голосование
           </Nav.Link>
         </Nav>

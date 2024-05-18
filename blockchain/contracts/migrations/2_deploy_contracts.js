@@ -1,5 +1,5 @@
-const Contacts = artifacts.require("./Contacts.sol");
+const Voting = artifacts.require("./Voting.sol");
 
 module.exports = function (deployer) {
-  deployer.deploy(Contacts);
+  deployer.deploy(Voting);
 };
