@@ -14,7 +14,7 @@ export const Navigation = () => {
     <Navbar className="p-3" style={customColor}>
       <Container>
         <Nav className="me-auto">
-          <Nav.Link className="text-white" href="/list">
+          <Nav.Link className="text-white" href="/voting">
             Список голосований
           </Nav.Link>
           <Nav.Link className="text-white" href="/profile">

@@ -23,8 +23,12 @@ const CreateVotingForm = ({ contract }) => {
   };
 
   const createVoting = async () => {
+    let finalOptions = options;
+    if (optionText.trim() !== "") {
+      finalOptions = [...options, optionText];
+    }
+
     try {
-      console.log(options);
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
@@ -34,13 +38,19 @@ const CreateVotingForm = ({ contract }) => {
         VOTING_ADDRESS
       );
 
-      // Преобразование даты в количество секунд с начала эпохи Unix
       const endDateInSeconds = new Date(endDate).getTime() / 1000;
 
+      console.log("Передаваемые варианты:", finalOptions);
+
       await contractInstance.methods
-        .createVoting(votingName, options, endDateInSeconds)
+        .createVoting(votingName, finalOptions, endDateInSeconds)
         .send({ from: accounts[0] });
       console.log("Голосование успешно создано!");
+
+      setVotingName("");
+      setOptions([]);
+      setOptionText("");
+      setEndDate("");
     } catch (error) {
       console.error("Ошибка при создании голосования", error);
     }
@@ -60,19 +70,22 @@ const CreateVotingForm = ({ contract }) => {
       <div>
         <label>Варианты ответа:</label>
         {options.map((option, index) => (
-          <input
-            key={index}
-            type="text"
-            value={option}
-            onChange={(e) => handleOptionChange(e, index)}
-          />
+          <div key={index} className={style.option}>
+            <input
+              type="text"
+              value={option}
+              onChange={(e) => handleOptionChange(e, index)}
+            />
+          </div>
         ))}
-        <input
-          type="text"
-          value={optionText}
-          onChange={(e) => setOptionText(e.target.value)}
-        />
-        <button onClick={addOption}>Добавить вариант</button>
+        <div className={style.addOption}>
+          <input
+            type="text"
+            value={optionText}
+            onChange={(e) => setOptionText(e.target.value)}
+          />
+          <button onClick={addOption}>Добавить вариант</button>
+        </div>
       </div>
       <div>
         <label>Дата завершения:</label>
@@ -82,7 +95,9 @@ const CreateVotingForm = ({ contract }) => {
           onChange={(e) => setEndDate(e.target.value)}
         />
       </div>
-      <button onClick={createVoting}>Создать голосование</button>
+      <button className={style.btn} onClick={createVoting}>
+        Создать голосование
+      </button>
     </div>
   );
 };

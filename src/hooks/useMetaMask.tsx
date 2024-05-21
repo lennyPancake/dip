@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import {
+import React, {
   useState,
   useEffect,
   createContext,
@@ -7,11 +6,12 @@ import {
   useContext,
   useCallback,
 } from "react";
-import React from "react";
 import detectEthereumProvider from "@metamask/detect-provider";
 import { formatBalance } from "../utils";
 import Web3 from "web3";
-import { signTransaction } from "web3/lib/commonjs/eth.exports";
+import Button from "react-bootstrap/Button";
+import Modal from "react-bootstrap/Modal";
+import Spinner from "react-bootstrap/Spinner";
 
 interface WalletState {
   accounts: any[];
@@ -39,23 +39,52 @@ const MetaMaskContext = createContext<MetaMaskContextData>(
   {} as MetaMaskContextData
 );
 
+const MyVerticallyCenteredModal = (props: any) => {
+  return (
+    <Modal
+      {...props}
+      aria-labelledby="contained-modal-title-vcenter"
+      centered
+      class="nav-link"
+    >
+      <Modal.Header closeButton>
+        <Modal.Title id="contained-modal-title-vcenter">
+          MetaMask Connection
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {props.isConnecting && <p>Connecting to MetaMask, please wait...</p>}
+        {props.isSigning && <p>Signing the message, please wait...</p>}
+        {props.isSuccess && <p>Successfully connected and signed in!</p>}
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button onClick={props.onHide} disabled={!props.isSuccess}>
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
+};
+
 export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
   const [hasProvider, setHasProvider] = useState<boolean | null>(null);
-
   const [isConnecting, setIsConnecting] = useState(false);
-
+  const [isSigning, setIsSigning] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const clearError = () => setErrorMessage("");
-
   const [wallet, setWallet] = useState(disconnectedState);
-  // useCallback ensures that we don't uselessly re-create the _updateWallet function on every render
+  const [modalShow, setModalShow] = useState(false);
+
   const _updateWallet = useCallback(async (providedAccounts?: any) => {
     const accounts =
       providedAccounts ||
       (await window.ethereum.request({ method: "eth_accounts" }));
 
     if (accounts.length === 0) {
-      // If there are no accounts, then the user is disconnected
       setWallet(disconnectedState);
       return;
     }
@@ -82,58 +111,52 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
     (accounts: any) => _updateWallet(accounts),
     [_updateWallet]
   );
-  const handleSignMessage = async () => {
+
+  const handleSignMessage = async (selectedAddress: string) => {
+    setIsSigning(true);
+
     if (window.ethereum) {
       const web3 = new Web3(window.ethereum);
-      const accounts = await web3.eth.requestAccounts();
-      const selectedAddress = accounts[0];
-
-      // Генерация сообщения для подписи
-      const message =
-        "Confirm authorization in voting system with your wallet:" +
-        selectedAddress;
+      const message = `Confirm authorization in voting system with your wallet: ${selectedAddress}`;
 
       try {
-        // Отправка сообщения на подпись
         const signature = await web3.eth.personal.sign(
           message,
           selectedAddress,
           ""
         );
 
-        // Отправка подписи на ваш сервер
-        fetch("http://localhost:5000/signature-verification", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            message,
-            signature,
-            walletAddress: selectedAddress,
-          }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            // Обработка ответа сервера
-            console.log(data);
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-      } catch (error) {
-        console.error("Error:", error);
+        const response = await fetch(
+          "http://localhost:5000/signature-verification",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message,
+              signature,
+              walletAddress: selectedAddress,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          setIsSuccess(true);
+          setIsSigning(false);
+        } else {
+          throw new Error("Failed to verify signature");
+        }
+      } catch (error: any) {
+        setErrorMessage(error.message);
+        setIsSigning(false);
       }
     } else {
-      console.error("MetaMask not detected.");
+      setErrorMessage("MetaMask not detected.");
+      setIsSigning(false);
     }
   };
-  /**
-   * This logic checks if MetaMask is installed. If it is, then we setup some
-   * event handlers to update the wallet state when MetaMask changes. The function
-   * returned from useEffect is used as a "clean-up": in there, we remove the event
-   * handlers whenever the MetaMaskProvider is unmounted.
-   */
+
   useEffect(() => {
     const getProvider = async () => {
       const provider = await detectEthereumProvider({ silent: true });
@@ -153,19 +176,21 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
       window.ethereum?.removeListener("chainChanged", updateWalletAndAccounts);
     };
   }, [updateWallet, updateWalletAndAccounts]);
+
   const connectMetaMask = async () => {
     setIsConnecting(true);
+    setModalShow(true);
+
     try {
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
+
       clearError();
       updateWallet(accounts);
-      handleSignMessage();
-      // Получение имени пользователя
-      //const userName = prompt("Please enter your username");
 
-      // Отправка данных на сервер
+      await handleSignMessage(accounts[0]);
+
       fetch("http://localhost:5000/users", {
         method: "POST",
         headers: {
@@ -187,6 +212,7 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
     } catch (err: any) {
       setErrorMessage(err.message);
     }
+
     setIsConnecting(false);
   };
 
@@ -203,6 +229,14 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
       }}
     >
       {children}
+
+      <MyVerticallyCenteredModal
+        show={modalShow}
+        onHide={() => setModalShow(false)}
+        isConnecting={isConnecting}
+        isSigning={isSigning}
+        isSuccess={isSuccess}
+      />
     </MetaMaskContext.Provider>
   );
 };
@@ -228,6 +262,7 @@ export const quitWallet = async () => {
     alert("MetaMask is not installed or not connected.");
   }
 };
+
 export const useMetaMask = () => {
   const context = useContext(MetaMaskContext);
   if (context === undefined) {
