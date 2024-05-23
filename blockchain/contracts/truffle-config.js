@@ -20,7 +20,6 @@ module.exports = {
     tests: "./test",
     cache: "./cache",
     artifacts: "./artifacts",
-    // Добавьте путь к контрактам OpenZeppelin
     contracts: "./node_modules/@openzeppelin/contracts/token/ERC20",
   },
 };
