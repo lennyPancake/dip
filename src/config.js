@@ -1,6 +1,128 @@
-export const VOTING_ADDRESS = "0x8Ae4AeaC96b5c2AB7e3463C895ef6FFCAE42E569";
+export const VOTING_ADDRESS = "0x4cC8506d0E855a98071Ab809e3AB8E38120ea5c7";
 
 export const VOTING_ABI = [
+  {
+    inputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "sessionId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "voter",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "option",
+        type: "string",
+      },
+    ],
+    name: "Voted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "name",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "description",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "category",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "endDate",
+        type: "uint256",
+      },
+    ],
+    name: "VotingCreated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "id",
+        type: "uint256",
+      },
+    ],
+    name: "VotingEnded",
+    type: "event",
+  },
+  {
+    constant: true,
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "hasVoted",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "owner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
   {
     constant: true,
     inputs: [
@@ -49,6 +171,16 @@ export const VOTING_ABI = [
         type: "string",
       },
       {
+        internalType: "string",
+        name: "description",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "category",
+        type: "string",
+      },
+      {
         internalType: "uint256",
         name: "endDate",
         type: "uint256",
@@ -57,6 +189,11 @@ export const VOTING_ABI = [
         internalType: "bool",
         name: "isActive",
         type: "bool",
+      },
+      {
+        internalType: "address",
+        name: "creator",
+        type: "address",
       },
     ],
     payable: false,
@@ -69,6 +206,16 @@ export const VOTING_ABI = [
       {
         internalType: "string",
         name: "_name",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_description",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "_category",
         type: "string",
       },
       {
@@ -105,6 +252,16 @@ export const VOTING_ABI = [
         type: "string",
       },
       {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+      {
         internalType: "string[]",
         name: "",
         type: "string[]",
@@ -118,6 +275,11 @@ export const VOTING_ABI = [
         internalType: "bool",
         name: "",
         type: "bool",
+      },
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     payable: false,
@@ -140,6 +302,16 @@ export const VOTING_ABI = [
         type: "string[]",
       },
       {
+        internalType: "string[]",
+        name: "",
+        type: "string[]",
+      },
+      {
+        internalType: "string[]",
+        name: "",
+        type: "string[]",
+      },
+      {
         internalType: "uint256[]",
         name: "",
         type: "uint256[]",
@@ -148,6 +320,32 @@ export const VOTING_ABI = [
         internalType: "bool[]",
         name: "",
         type: "bool[]",
+      },
+      {
+        internalType: "address[]",
+        name: "",
+        type: "address[]",
+      },
+    ],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_id",
+        type: "uint256",
+      },
+    ],
+    name: "getVotingSessionOptions",
+    outputs: [
+      {
+        internalType: "string[]",
+        name: "",
+        type: "string[]",
       },
     ],
     payable: false,
@@ -169,6 +367,21 @@ export const VOTING_ABI = [
       },
     ],
     name: "vote",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    constant: false,
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_id",
+        type: "uint256",
+      },
+    ],
+    name: "endVoting",
     outputs: [],
     payable: false,
     stateMutability: "nonpayable",
@@ -219,6 +432,77 @@ export const VOTING_ABI = [
         internalType: "uint256[]",
         name: "",
         type: "uint256[]",
+      },
+    ],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: false,
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_id",
+        type: "uint256",
+      },
+    ],
+    name: "pauseVoting",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    constant: false,
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_id",
+        type: "uint256",
+      },
+    ],
+    name: "resumeVoting",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    constant: false,
+    inputs: [
+      {
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "transferOwnership",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_id",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "_user",
+        type: "address",
+      },
+    ],
+    name: "hasUserVoted",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
       },
     ],
     payable: false,

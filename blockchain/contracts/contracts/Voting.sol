@@ -183,4 +183,7 @@ contract Voting {
         require(newOwner != address(0), "Неверный адрес нового владельца");
         owner = newOwner;
     }
+    function hasUserVoted(uint _id, address _user) public view returns (bool) {
+        return hasVoted[_id][_user];
+    }
 }

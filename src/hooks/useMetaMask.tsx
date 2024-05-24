@@ -12,6 +12,7 @@ import Web3 from "web3";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Spinner from "react-bootstrap/Spinner";
+import { isCommaListExpression } from "typescript";
 
 interface WalletState {
   accounts: any[];
@@ -24,6 +25,7 @@ interface MetaMaskContextData {
   hasProvider: boolean | null;
   error: boolean;
   errorMessage: string;
+  isSigning: boolean;
   isConnecting: boolean;
   connectMetaMask: () => void;
   clearError: () => void;
@@ -45,6 +47,7 @@ const MyVerticallyCenteredModal = (props: any) => {
       {...props}
       aria-labelledby="contained-modal-title-vcenter"
       centered
+      data-bs-theme	="dark"
       class="nav-link"
     >
       <Modal.Header closeButton>
@@ -56,9 +59,11 @@ const MyVerticallyCenteredModal = (props: any) => {
         {props.isConnecting && <p>Connecting to MetaMask, please wait...</p>}
         {props.isSigning && <p>Signing the message, please wait...</p>}
         {props.isSuccess && <p>Successfully connected and signed in!</p>}
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+        {props.isConnecting && (
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        )}
       </Modal.Body>
       <Modal.Footer>
         <Button onClick={props.onHide} disabled={!props.isSuccess}>
@@ -73,6 +78,7 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
   const [hasProvider, setHasProvider] = useState<boolean | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
+  const [isSigned, setIsSigned] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const clearError = () => setErrorMessage("");
@@ -144,6 +150,7 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
         if (response.ok) {
           setIsSuccess(true);
           setIsSigning(false);
+          setIsSigned(true);
         } else {
           throw new Error("Failed to verify signature");
         }
@@ -223,6 +230,7 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
         hasProvider,
         error: !!errorMessage,
         errorMessage,
+        isSigning,
         isConnecting,
         connectMetaMask,
         clearError,
@@ -253,6 +261,7 @@ export const quitWallet = async () => {
           },
         ],
       });
+
       alert("Successfully disconnected from DApp.");
     } catch (error) {
       console.error(error);

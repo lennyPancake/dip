@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import Web3 from "web3";
 import { VOTING_ABI, VOTING_ADDRESS } from "../config";
+import { Form, Container, InputGroup } from "react-bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
 import style from "./Create.module.css";
 
-const CreateVotingForm = ({ contract }) => {
+const CreateVotingForm = () => {
   const [votingName, setVotingName] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [options, setOptions] = useState([]);
   const [optionText, setOptionText] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -15,19 +19,20 @@ const CreateVotingForm = ({ contract }) => {
     setOptions(updatedOptions);
   };
 
-  const addOption = () => {
+  const addOption = (e) => {
+    e.preventDefault();
     if (optionText.trim() !== "") {
       setOptions((prevOptions) => [...prevOptions, optionText]);
       setOptionText("");
     }
   };
 
-  const createVoting = async () => {
+  const createVoting = async (e) => {
+    e.preventDefault();
     let finalOptions = options;
     if (optionText.trim() !== "") {
       finalOptions = [...options, optionText];
     }
-
     try {
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
@@ -38,67 +43,91 @@ const CreateVotingForm = ({ contract }) => {
         VOTING_ADDRESS
       );
 
-      const endDateInSeconds = new Date(endDate).getTime() / 1000;
-
+      const endDateInSeconds = Math.floor(new Date(endDate).getTime() / 1000);
       console.log("Передаваемые варианты:", finalOptions);
-
       await contractInstance.methods
-        .createVoting(votingName, finalOptions, endDateInSeconds)
+        .createVoting(
+          votingName,
+          description,
+          category,
+          finalOptions,
+          endDateInSeconds,
+          accounts[0]
+        )
         .send({ from: accounts[0] });
       console.log("Голосование успешно создано!");
-
-      setVotingName("");
-      setOptions([]);
-      setOptionText("");
-      setEndDate("");
     } catch (error) {
       console.error("Ошибка при создании голосования", error);
     }
   };
 
   return (
-    <div className={style.main}>
-      <h2>Создать голосование</h2>
-      <div>
-        <label>Название голосования:</label>
-        <input
-          type="text"
-          value={votingName}
-          onChange={(e) => setVotingName(e.target.value)}
-        />
-      </div>
-      <div>
-        <label>Варианты ответа:</label>
-        {options.map((option, index) => (
-          <div key={index} className={style.option}>
-            <input
-              type="text"
-              value={option}
-              onChange={(e) => handleOptionChange(e, index)}
-            />
-          </div>
-        ))}
-        <div className={style.addOption}>
-          <input
+    <Container className={style.main}>
+      <h2 className="my-4">Создать голосование</h2>
+      <Form onSubmit={createVoting}>
+        <Form.Group controlId="votingName">
+          <Form.Label>Название голосования</Form.Label>
+          <Form.Control
             type="text"
-            value={optionText}
-            onChange={(e) => setOptionText(e.target.value)}
+            value={votingName}
+            onChange={(e) => setVotingName(e.target.value)}
           />
-          <button onClick={addOption}>Добавить вариант</button>
-        </div>
-      </div>
-      <div>
-        <label>Дата завершения:</label>
-        <input
-          type="datetime-local"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
-      </div>
-      <button className={style.btn} onClick={createVoting}>
-        Создать голосование
-      </button>
-    </div>
+        </Form.Group>
+
+        <Form.Group controlId="description" className="mt-3">
+          <Form.Label>Описание голосования</Form.Label>
+          <Form.Control
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </Form.Group>
+
+        <Form.Group controlId="category" className="mt-3">
+          <Form.Label>Категория голосования</Form.Label>
+          <Form.Control
+            type="text"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
+        </Form.Group>
+
+        <Form.Group controlId="options" className="mt-3">
+          <Form.Label>Варианты ответа</Form.Label>
+          {options.map((option, index) => (
+            <InputGroup className="mb-2" key={index}>
+              <Form.Control
+                type="text"
+                value={option}
+                onChange={(e) => handleOptionChange(e, index)}
+              />
+            </InputGroup>
+          ))}
+          <InputGroup className="mb-2">
+            <Form.Control
+              type="text"
+              value={optionText}
+              onChange={(e) => setOptionText(e.target.value)}
+              placeholder="Новый вариант"
+            />
+            <button style={{ marginLeft: "10px" }} onClick={addOption}>
+              Добавить вариант
+            </button>
+          </InputGroup>
+        </Form.Group>
+
+        <Form.Group controlId="endDate" className="mt-3">
+          <Form.Label>Дата завершения</Form.Label>
+          <Form.Control
+            type="datetime-local"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </Form.Group>
+
+        <button type="submit">Создать голосование</button>
+      </Form>
+    </Container>
   );
 };
 

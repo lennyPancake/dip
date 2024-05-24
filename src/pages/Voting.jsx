@@ -1,108 +1,171 @@
 import React, { useState, useEffect } from "react";
 import Web3 from "web3";
-import { useParams } from "react-router-dom";
 import { VOTING_ABI, VOTING_ADDRESS } from "../config";
 import style from "./Voting.module.css";
-import withAuth from "../components/withAuth";
+import { useNavigate, useParams } from "react-router-dom";
+import { ListGroup, ListGroupItem, Placeholder } from "react-bootstrap";
 
 const Voting = () => {
   const { id } = useParams();
   const [votingSession, setVotingSession] = useState(null);
   const [selectedOption, setSelectedOption] = useState("");
-  const [message, setMessage] = useState("");
-
+  const [hasVoted, setHasVoted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchVotingSession = async () => {
       try {
-        if (typeof window.ethereum !== "undefined") {
-          await window.ethereum.request({ method: "eth_requestAccounts" });
-          const web3 = new Web3(window.ethereum);
-          const contract = new web3.eth.Contract(VOTING_ABI, VOTING_ADDRESS);
-          const votingData = await contract.methods.getVotingSession(id).call();
-          const { 0: name, 1: options, 2: endDate, 3: isActive } = votingData;
+        const web3 = new Web3(window.ethereum);
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        const contractInstance = new web3.eth.Contract(
+          VOTING_ABI,
+          VOTING_ADDRESS
+        );
+        const sessionId = id; // Get the voting session ID from the URL params
+        const votingData = await contractInstance.methods
+          .getVotingSession(sessionId)
+          .call();
+        const {
+          0: name,
+          1: description,
+          2: category,
+          3: options,
+          4: endDate,
+          5: isActive,
+          6: creator,
+        } = votingData;
 
-          setVotingSession({
-            name,
-            options,
-            endDate: Number(endDate), // Явное преобразование в Number
-            isActive,
-          });
-        } else {
-          setMessage(
-            "MetaMask не установлен. Установите MetaMask для продолжения."
-          );
-        }
+        setVotingSession({
+          id: sessionId,
+          name,
+          description,
+          category,
+          endDate: Number(endDate),
+          isActive,
+          creator,
+          options,
+        });
+
+        const hasVoted = await contractInstance.methods
+          .hasUserVoted(sessionId, accounts[0])
+          .call();
+        setHasVoted(hasVoted);
+        setLoading(false);
       } catch (error) {
-        console.error(
-          "Ошибка при получении данных о сессии голосования:",
-          error
-        );
-        setMessage(
-          "Произошла ошибка при загрузке данных о сессии голосования."
-        );
+        console.error("Ошибка при получении сессии голосования", error);
+        setLoading(false);
       }
     };
 
-    fetchData();
+    fetchVotingSession();
   }, [id]);
 
-  const handleVote = async () => {
-    if (selectedOption === "") {
-      setMessage("Выберите вариант для голосования.");
-      return;
-    }
-
+  const vote = async () => {
     try {
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
       const web3 = new Web3(window.ethereum);
-      const contract = new web3.eth.Contract(VOTING_ABI, VOTING_ADDRESS);
+      const contractInstance = new web3.eth.Contract(
+        VOTING_ABI,
+        VOTING_ADDRESS
+      );
 
-      await contract.methods
+      await contractInstance.methods
         .vote(id, selectedOption)
         .send({ from: accounts[0] });
-      setMessage("Ваш голос успешно учтен!");
+      console.log("Голос успешно подан!");
+      setHasVoted(true);
     } catch (error) {
-      console.error("Ошибка при голосовании:", error);
-      setMessage("Произошла ошибка при голосовании. Попробуйте еще раз.");
+      console.error("Ошибка при голосовании", error);
     }
   };
 
+  if (loading) {
+    return (
+      <div className={style.main}>
+        <div className={style.content}>
+          <Placeholder xs={6} />
+          <Placeholder className="w-75" />{" "}
+          <Placeholder style={{ width: "25%" }} />
+          <Placeholder xs={6} />
+          <Placeholder xs={6} />
+        </div>
+      </div>
+    );
+  }
+
   if (!votingSession) {
-    return <div className={style.main}>Загрузка...</div>;
+    return <div>Сессия голосования не найдена</div>;
   }
 
   return (
     <div className={style.main}>
-      <h2>Голосование: {votingSession.name}</h2>
-      <div>
-        <p>
-          Дата завершения:{" "}
-          {new Date(votingSession.endDate * 1000).toLocaleString()}
-        </p>
-        <p>Статус: {votingSession.isActive ? "Активно" : "Завершено"}</p>
-        <form>
-          {votingSession.options.map((option, index) => (
-            <div key={index}>
-              <input
-                type="radio"
-                id={option}
-                name="vote"
-                value={option}
-                onChange={(e) => setSelectedOption(e.target.value)}
-              />
-              <label htmlFor={option}>{option}</label>
+      <div className={style.content}>
+        <h2>Голосование: {votingSession.name}</h2>
+
+        <div key={votingSession.id} className={style.session}>
+          <h3>{votingSession.name}</h3>
+          <p>
+            {" "}
+            <b>Описание:</b> {votingSession.description}
+          </p>
+          <p>
+            <b>Категория:</b> {votingSession.category}
+          </p>
+          <p>
+            <b>Дата завершения:</b>{" "}
+            {new Date(votingSession.endDate * 1000).toLocaleString()}
+          </p>
+          {votingSession.isActive && !hasVoted && (
+            <div>
+              <label>Выберите вариант:</label>
+              <div className={style.list}>
+                <ListGroup size="lg" data-bs-theme="dark">
+                  {votingSession.options.map((option, index) => (
+                    <ListGroupItem
+                      key={index}
+                      action
+                      variant="secondary"
+                      active={selectedOption === option}
+                      onClick={() => setSelectedOption(option)}
+                    >
+                      {option}
+                    </ListGroupItem>
+                  ))}
+                </ListGroup>
+              </div>
+
+              <button onClick={vote} disabled={selectedOption === ""}>
+                Голосовать
+              </button>
             </div>
-          ))}
-        </form>
-        <button onClick={handleVote} disabled={!votingSession.isActive}>
-          Голосовать
-        </button>
-        {message && <p>{message}</p>}
+          )}
+          {hasVoted && (
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <p style={{ margin: "0" }}>
+                Вы уже проголосовали в этой сессии голосования.
+              </p>
+              <button
+                style={{
+                  marginBottom: "10px",
+                  marginLeft: "10px",
+                  textDecoration: "underline",
+                }}
+                onClick={() => {
+                  navigate("/voting");
+                }}
+              >
+                Назад
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default withAuth(Voting);
+export default Voting;
