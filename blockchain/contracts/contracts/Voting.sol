@@ -15,8 +15,8 @@ contract Voting {
     }
 
     VotingSession[] public votingSessions;
-    mapping(uint => mapping(string => uint)) public votes; // Маппинг для хранения голосов
-    mapping(uint => mapping(address => bool)) public hasVoted; // Маппинг для отслеживания, проголосовал ли пользователь
+    mapping(uint => mapping(string => uint)) public votes; // Mapping to store votes
+    mapping(uint => mapping(address => bool)) public hasVoted; // Mapping to track if a user has voted
     address public owner;
 
     event VotingCreated(uint id, string name, string description, string category, uint endDate);
@@ -24,18 +24,18 @@ contract Voting {
     event VotingEnded(uint id);
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Только владелец может выполнять это действие");
+        require(msg.sender == owner, "Only the owner can perform this action");
         _;
     }
 
     modifier onlyCreator(uint _id) {
-        require(msg.sender == votingSessions[_id - 1].creator, "Только создатель голосования может выполнять это действие");
+        require(msg.sender == votingSessions[_id - 1].creator, "Only the creator of the voting session can perform this action");
         _;
     }
 
     modifier activeVoting(uint _id) {
-        require(votingSessions[_id - 1].isActive, "Голосование не активно");
-        require(block.timestamp < votingSessions[_id - 1].endDate, "Время голосования истекло");
+        require(votingSessions[_id - 1].isActive, "Voting is not active");
+        require(block.timestamp < votingSessions[_id - 1].endDate, "Voting time has expired");
         _;
     }
 
@@ -44,7 +44,7 @@ contract Voting {
     }
 
     function createVoting(string memory _name, string memory _description, string memory _category, string[] memory _options, uint _endDate) public {
-        require(_endDate > block.timestamp, "Дата завершения должна быть в будущем");
+        require(_endDate > block.timestamp, "The end date must be in the future");
 
         VotingSession memory newVoting = VotingSession({
             id: votingSessions.length + 1,
@@ -62,7 +62,7 @@ contract Voting {
     }
 
     function getVotingSession(uint _id) public view returns (string memory, string memory, string memory, string[] memory, uint, bool, address) {
-        require(_id > 0 && _id <= votingSessions.length, "Неверный ID голосования");
+        require(_id > 0 && _id <= votingSessions.length, "Invalid voting ID");
         VotingSession storage session = votingSessions[_id - 1];
         return (session.name, session.description, session.category, session.options, session.endDate, session.isActive, session.creator);
     }
@@ -93,16 +93,16 @@ contract Voting {
     }
 
     function getVotingSessionOptions(uint _id) public view returns (string[] memory) {
-        require(_id > 0 && _id <= votingSessions.length, "Неверный ID голосования");
+        require(_id > 0 && _id <= votingSessions.length, "Invalid voting ID");
         VotingSession storage session = votingSessions[_id - 1];
         return session.options;
     }
 
     function vote(uint _id, string memory _option) public activeVoting(_id) {
         VotingSession storage session = votingSessions[_id - 1];
-        require(!hasVoted[_id][msg.sender], "Вы уже проголосовали");
+        require(!hasVoted[_id][msg.sender], "You have already voted");
 
-        // Проверка, что опция существует
+        // Check if the option exists
         bool optionExists = false;
         for (uint i = 0; i < session.options.length; i++) {
             if (keccak256(abi.encodePacked(session.options[i])) == keccak256(abi.encodePacked(_option))) {
@@ -110,7 +110,7 @@ contract Voting {
                 break;
             }
         }
-        require(optionExists, "Опция голосования не существует");
+        require(optionExists, "Voting option does not exist");
 
         votes[_id][_option]++;
         hasVoted[_id][msg.sender] = true;
@@ -119,14 +119,14 @@ contract Voting {
 
     function endVoting(uint _id) public onlyCreator(_id) {
         VotingSession storage session = votingSessions[_id - 1];
-        require(session.isActive, "Голосование уже завершено");
+        require(session.isActive, "Voting has already ended");
 
         session.isActive = false;
         emit VotingEnded(_id);
     }
 
     function getVotes(uint _id) public view returns (string[] memory, uint[] memory) {
-        require(_id > 0 && _id <= votingSessions.length, "Неверный ID голосования");
+        require(_id > 0 && _id <= votingSessions.length, "Invalid voting ID");
         VotingSession storage session = votingSessions[_id - 1];
 
         uint optionsLength = session.options.length;
@@ -167,20 +167,20 @@ contract Voting {
 
     function pauseVoting(uint _id) public onlyCreator(_id) {
         VotingSession storage session = votingSessions[_id - 1];
-        require(session.isActive, "Голосование уже приостановлено или завершено");
+        require(session.isActive, "Voting is already paused or ended");
 
         session.isActive = false;
     }
 
     function resumeVoting(uint _id) public onlyCreator(_id) {
         VotingSession storage session = votingSessions[_id - 1];
-        require(!session.isActive, "Голосование уже активно");
+        require(!session.isActive, "Voting is already active");
 
         session.isActive = true;
     }
 
     function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0), "Неверный адрес нового владельца");
+        require(newOwner != address(0), "Invalid new owner address");
         owner = newOwner;
     }
     function hasUserVoted(uint _id, address _user) public view returns (bool) {
