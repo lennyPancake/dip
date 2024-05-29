@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED 
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.4.22 <0.9.0;
 pragma experimental ABIEncoderV2;
 
@@ -11,17 +11,19 @@ contract Voting {
         string[] options;
         uint endDate;
         bool isActive;
+        bool resultsRevealed;
         address creator;
     }
 
     VotingSession[] public votingSessions;
-    mapping(uint => mapping(string => uint)) public votes; // Mapping to store votes
-    mapping(uint => mapping(address => bool)) public hasVoted; // Mapping to track if a user has voted
+    mapping(uint => mapping(string => uint)) public votes;
+    mapping(uint => mapping(address => bool)) public hasVoted;
     address public owner;
 
     event VotingCreated(uint id, string name, string description, string category, uint endDate);
     event Voted(uint sessionId, address voter, string option);
     event VotingEnded(uint id);
+    event ResultsRevealed(uint id);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only the owner can perform this action");
@@ -36,6 +38,11 @@ contract Voting {
     modifier activeVoting(uint _id) {
         require(votingSessions[_id - 1].isActive, "Voting is not active");
         require(block.timestamp < votingSessions[_id - 1].endDate, "Voting time has expired");
+        _;
+    }
+
+    modifier votingEnded(uint _id) {
+        require(block.timestamp >= votingSessions[_id - 1].endDate, "Voting is still active");
         _;
     }
 
@@ -54,6 +61,7 @@ contract Voting {
             options: _options,
             endDate: _endDate,
             isActive: true,
+            resultsRevealed: false,
             creator: msg.sender
         });
 
@@ -61,10 +69,10 @@ contract Voting {
         emit VotingCreated(newVoting.id, _name, _description, _category, _endDate);
     }
 
-    function getVotingSession(uint _id) public view returns (string memory, string memory, string memory, string[] memory, uint, bool, address) {
+    function getVotingSession(uint _id) public view returns (string memory, string memory, string memory, string[] memory, uint, bool, address, bool) {
         require(_id > 0 && _id <= votingSessions.length, "Invalid voting ID");
         VotingSession storage session = votingSessions[_id - 1];
-        return (session.name, session.description, session.category, session.options, session.endDate, session.isActive, session.creator);
+        return (session.name, session.description, session.category, session.options, session.endDate, session.isActive, session.creator, session.resultsRevealed);
     }
 
     function getVotingSessions() public view returns (uint[] memory, string[] memory, string[] memory, string[] memory, uint[] memory, bool[] memory, address[] memory) {
@@ -102,7 +110,6 @@ contract Voting {
         VotingSession storage session = votingSessions[_id - 1];
         require(!hasVoted[_id][msg.sender], "You have already voted");
 
-        // Check if the option exists
         bool optionExists = false;
         for (uint i = 0; i < session.options.length; i++) {
             if (keccak256(abi.encodePacked(session.options[i])) == keccak256(abi.encodePacked(_option))) {
@@ -117,17 +124,10 @@ contract Voting {
         emit Voted(_id, msg.sender, _option);
     }
 
-    function endVoting(uint _id) public onlyCreator(_id) {
-        VotingSession storage session = votingSessions[_id - 1];
-        require(session.isActive, "Voting has already ended");
-
-        session.isActive = false;
-        emit VotingEnded(_id);
-    }
-
     function getVotes(uint _id) public view returns (string[] memory, uint[] memory) {
         require(_id > 0 && _id <= votingSessions.length, "Invalid voting ID");
         VotingSession storage session = votingSessions[_id - 1];
+        //require(session.resultsRevealed, "Results are not yet revealed");
 
         uint optionsLength = session.options.length;
         uint[] memory voteCounts = new uint[](optionsLength);
@@ -137,6 +137,14 @@ contract Voting {
         }
 
         return (session.options, voteCounts);
+    }
+
+    function revealResults(uint _id) public onlyCreator(_id) votingEnded(_id) {
+        VotingSession storage session = votingSessions[_id - 1];
+        require(!session.resultsRevealed, "Results have already been revealed");
+
+        session.resultsRevealed = true;
+        emit ResultsRevealed(_id);
     }
 
     function getAllVotes() public view returns (uint[] memory, string[] memory, uint[] memory) {
@@ -154,36 +162,28 @@ contract Voting {
         uint index = 0;
         for (uint i = 0; i < sessionsLength; i++) {
             VotingSession storage session = votingSessions[i];
-            for (uint j = 0; j < session.options.length; j++) {
-                sessionIds[index] = session.id;
-                optionNames[index] = session.options[j];
-                voteCounts[index] = votes[session.id][session.options[j]];
-                index++;
+            if (session.resultsRevealed) {
+                for (uint j = 0; j < session.options.length; j++) {
+                    sessionIds[index] = session.id;
+                    optionNames[index] = session.options[j];
+                    voteCounts[index] = votes[session.id][session.options[j]];
+                    index++;
+                }
             }
         }
 
         return (sessionIds, optionNames, voteCounts);
     }
 
-    function pauseVoting(uint _id) public onlyCreator(_id) {
-        VotingSession storage session = votingSessions[_id - 1];
-        require(session.isActive, "Voting is already paused or ended");
-
-        session.isActive = false;
-    }
-
-    function resumeVoting(uint _id) public onlyCreator(_id) {
-        VotingSession storage session = votingSessions[_id - 1];
-        require(!session.isActive, "Voting is already active");
-
-        session.isActive = true;
-    }
-
-    function transferOwnership(address newOwner) public onlyOwner {
-        require(newOwner != address(0), "Invalid new owner address");
-        owner = newOwner;
-    }
     function hasUserVoted(uint _id, address _user) public view returns (bool) {
         return hasVoted[_id][_user];
+    }
+
+    function endVoting(uint _id) public onlyCreator(_id) {
+        VotingSession storage session = votingSessions[_id - 1];
+        require(session.isActive, "Voting is already ended");
+
+        session.isActive = false;
+        emit VotingEnded(_id);
     }
 }
