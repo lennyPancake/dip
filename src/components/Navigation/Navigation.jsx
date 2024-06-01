@@ -10,24 +10,37 @@ import Nav from "react-bootstrap/Nav";
 import { Spinner } from "react-bootstrap";
 import Navbar from "react-bootstrap/Navbar";
 import "../Navigation/Navigation.module.css"; // Предполагаем, что стили подключены здесь
+import NavDropdown from "react-bootstrap/NavDropdown";
 
 const Navigation = () => {
   const { wallet, hasProvider, isSigning, isConnecting, connectMetaMask } =
     useMetaMask();
   const customColor = {
     backgroundColor: "rgb(39, 39, 39)",
+    color: "rgb(255,0,0)",
   };
 
   return (
     <Navbar className="p-3" style={customColor}>
       <Container>
         <Nav className="me-auto">
-          <Nav.Link className="text-white" href="/voting">
-            Список голосований
+          <Nav.Link className="text-white" href="/home">
+            Главная страница
           </Nav.Link>
-          <Nav.Link className="text-white" href="/profile">
-            Профиль
-          </Nav.Link>
+          <NavDropdown
+            menuVariant="dark"
+            title={
+              <span className="text-light my-auto">Список голосований</span>
+            }
+          >
+            <NavDropdown.Item href="/voting">
+              Активные голосования
+            </NavDropdown.Item>
+            <NavDropdown.Item href="/inactive">
+              Неактивные голосования
+            </NavDropdown.Item>
+          </NavDropdown>
+
           <Nav.Link className="text-white" href="/create">
             Создать голосование
           </Nav.Link>

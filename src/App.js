@@ -9,17 +9,19 @@ import Navigation from "./components/Navigation/Navigation"; // Импортир
 import { MetaMaskError } from "./components/MetamaskError";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
+import Home from "./pages/Home";
 
 function App() {
   return (
     <BrowserRouter>
       <Navigation />
       <Routes>
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/create" element={<Create />} />
-        <Route path="/voting" element={<List />} />
+        <Route path="/voting" element={<List active={true} />} />
         <Route path="/voting/:id" element={<Voting />} />
+        <Route path="/inactive" element={<List active={false} />} />
       </Routes>
       <MetaMaskError />
     </BrowserRouter>

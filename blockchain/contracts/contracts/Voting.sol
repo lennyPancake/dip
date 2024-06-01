@@ -7,20 +7,20 @@ contract Voting {
         uint id;
         string name;
         string description;
-        string category;
         string[] options;
         uint endDate;
         bool isActive;
         bool resultsRevealed;
+        bool deleted;
         address creator;
     }
 
     VotingSession[] public votingSessions;
     mapping(uint => mapping(string => uint)) public votes;
-    mapping(uint => mapping(address => bool)) public hasVoted;
+    mapping(uint => mapping(address => bool)) public hasVoted; 
     address public owner;
 
-    event VotingCreated(uint id, string name, string description, string category, uint endDate);
+    event VotingCreated(uint id, string name, string description, uint endDate);
     event Voted(uint sessionId, address voter, string option);
     event VotingEnded(uint id);
     event ResultsRevealed(uint id);
@@ -38,6 +38,7 @@ contract Voting {
     modifier activeVoting(uint _id) {
         require(votingSessions[_id - 1].isActive, "Voting is not active");
         require(block.timestamp < votingSessions[_id - 1].endDate, "Voting time has expired");
+        require(!votingSessions[_id - 1].deleted, "Voting session is deleted");
         _;
     }
 
@@ -50,54 +51,54 @@ contract Voting {
         owner = msg.sender;
     }
 
-    function createVoting(string memory _name, string memory _description, string memory _category, string[] memory _options, uint _endDate) public {
+    function createVoting(string memory _name, string memory _description, string[] memory _options, bool revealed, uint _endDate) public {
         require(_endDate > block.timestamp, "The end date must be in the future");
 
         VotingSession memory newVoting = VotingSession({
             id: votingSessions.length + 1,
             name: _name,
             description: _description,
-            category: _category,
             options: _options,
             endDate: _endDate,
             isActive: true,
-            resultsRevealed: false,
+            resultsRevealed: revealed,
+            deleted: false,
             creator: msg.sender
         });
 
         votingSessions.push(newVoting);
-        emit VotingCreated(newVoting.id, _name, _description, _category, _endDate);
+        emit VotingCreated(newVoting.id, _name, _description, _endDate);
     }
 
-    function getVotingSession(uint _id) public view returns (string memory, string memory, string memory, string[] memory, uint, bool, address, bool) {
+    function getVotingSession(uint _id) public view returns (string memory, string memory, string[] memory, uint, bool, address, bool, bool) {
         require(_id > 0 && _id <= votingSessions.length, "Invalid voting ID");
         VotingSession storage session = votingSessions[_id - 1];
-        return (session.name, session.description, session.category, session.options, session.endDate, session.isActive, session.creator, session.resultsRevealed);
+        return (session.name, session.description, session.options, session.endDate, session.isActive, session.creator, session.resultsRevealed, session.deleted);
     }
 
-    function getVotingSessions() public view returns (uint[] memory, string[] memory, string[] memory, string[] memory, uint[] memory, bool[] memory, address[] memory) {
+    function getVotingSessions() public view returns (uint[] memory, string[] memory, string[] memory, uint[] memory, bool[] memory, address[] memory, bool[] memory) {
         uint length = votingSessions.length;
 
         uint[] memory ids = new uint[](length);
         string[] memory names = new string[](length);
         string[] memory descriptions = new string[](length);
-        string[] memory categories = new string[](length);
         uint[] memory endDates = new uint[](length);
         bool[] memory statuses = new bool[](length);
         address[] memory creators = new address[](length);
+        bool[] memory deletions = new bool[](length);
 
         for (uint i = 0; i < length; i++) {
             VotingSession storage session = votingSessions[i];
             ids[i] = session.id;
             names[i] = session.name;
             descriptions[i] = session.description;
-            categories[i] = session.category;
             endDates[i] = session.endDate;
             statuses[i] = session.isActive;
             creators[i] = session.creator;
+            deletions[i] = session.deleted;
         }
 
-        return (ids, names, descriptions, categories, endDates, statuses, creators);
+        return (ids, names, descriptions, endDates, statuses, creators, deletions);
     }
 
     function getVotingSessionOptions(uint _id) public view returns (string[] memory) {
@@ -127,7 +128,6 @@ contract Voting {
     function getVotes(uint _id) public view returns (string[] memory, uint[] memory) {
         require(_id > 0 && _id <= votingSessions.length, "Invalid voting ID");
         VotingSession storage session = votingSessions[_id - 1];
-        //require(session.resultsRevealed, "Results are not yet revealed");
 
         uint optionsLength = session.options.length;
         uint[] memory voteCounts = new uint[](optionsLength);

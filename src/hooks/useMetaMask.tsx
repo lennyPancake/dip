@@ -47,7 +47,7 @@ const MyVerticallyCenteredModal = (props: any) => {
       {...props}
       aria-labelledby="contained-modal-title-vcenter"
       centered
-      data-bs-theme	="dark"
+      data-bs-theme="dark"
       class="nav-link"
     >
       <Modal.Header closeButton>
@@ -112,7 +112,40 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
     () => _updateWallet(),
     [_updateWallet]
   );
+  const switchToGanacheNetwork = async () => {
+    const ganacheChainId = "0x539"; // 1337 in hexadecimal
+    const ganacheNetworkData = {
+      chainId: ganacheChainId,
+      chainName: "Ganache",
+      rpcUrls: ["http://127.0.0.1:7545"],
+      nativeCurrency: {
+        name: "Ethereum",
+        symbol: "ETH",
+        decimals: 18,
+      },
+    };
 
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: ganacheChainId }],
+      });
+    } catch (switchError: any) {
+      // This error code indicates that the chain has not been added to MetaMask
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [ganacheNetworkData],
+          });
+        } catch (addError) {
+          console.error("Failed to add the Ganache network", addError);
+        }
+      } else {
+        console.error("Failed to switch to the Ganache network", switchError);
+      }
+    }
+  };
   const updateWallet = useCallback(
     (accounts: any) => _updateWallet(accounts),
     [_updateWallet]
@@ -123,7 +156,8 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
 
     if (window.ethereum) {
       const web3 = new Web3(window.ethereum);
-      const message = `Confirm authorization in voting system with your wallet: ${selectedAddress}`;
+      const message = `Проверьте ваш аккаунт. Чтобы завершить подключение, вы должны подписать сообщение в вашем кошельке, чтобы подтвердить, что вы являетесь владельцем этого аккаунта
+      Confirm authorization in voting system with your wallet: ${selectedAddress}`;
 
       try {
         const signature = await web3.eth.personal.sign(
@@ -192,6 +226,15 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
+
+      const currentChainId = await window.ethereum.request({
+        method: "eth_chainId",
+      });
+
+      if (currentChainId !== "0x539") {
+        // 1337 in hexadecimal
+        await switchToGanacheNetwork();
+      }
 
       clearError();
       updateWallet(accounts);

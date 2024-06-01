@@ -1,4 +1,4 @@
-export const VOTING_ADDRESS = "0xa14e87613E788D14045701B7C9a14176CdEAbF0a";
+export const VOTING_ADDRESS = "0x92054F35A4E59482863155E9ea3a08ff7f39459c";
 
 export const VOTING_ABI = [
   {
@@ -64,12 +64,6 @@ export const VOTING_ABI = [
         indexed: false,
         internalType: "string",
         name: "description",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "category",
         type: "string",
       },
       {
@@ -189,11 +183,6 @@ export const VOTING_ABI = [
         type: "string",
       },
       {
-        internalType: "string",
-        name: "category",
-        type: "string",
-      },
-      {
         internalType: "uint256",
         name: "endDate",
         type: "uint256",
@@ -206,6 +195,11 @@ export const VOTING_ABI = [
       {
         internalType: "bool",
         name: "resultsRevealed",
+        type: "bool",
+      },
+      {
+        internalType: "bool",
+        name: "deleted",
         type: "bool",
       },
       {
@@ -232,14 +226,14 @@ export const VOTING_ABI = [
         type: "string",
       },
       {
-        internalType: "string",
-        name: "_category",
-        type: "string",
-      },
-      {
         internalType: "string[]",
         name: "_options",
         type: "string[]",
+      },
+      {
+        internalType: "bool",
+        name: "revealed",
+        type: "bool",
       },
       {
         internalType: "uint256",
@@ -275,11 +269,6 @@ export const VOTING_ABI = [
         type: "string",
       },
       {
-        internalType: "string",
-        name: "",
-        type: "string",
-      },
-      {
         internalType: "string[]",
         name: "",
         type: "string[]",
@@ -298,6 +287,11 @@ export const VOTING_ABI = [
         internalType: "address",
         name: "",
         type: "address",
+      },
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
       },
       {
         internalType: "bool",
@@ -330,11 +324,6 @@ export const VOTING_ABI = [
         type: "string[]",
       },
       {
-        internalType: "string[]",
-        name: "",
-        type: "string[]",
-      },
-      {
         internalType: "uint256[]",
         name: "",
         type: "uint256[]",
@@ -348,6 +337,11 @@ export const VOTING_ABI = [
         internalType: "address[]",
         name: "",
         type: "address[]",
+      },
+      {
+        internalType: "bool[]",
+        name: "",
+        type: "bool[]",
       },
     ],
     payable: false,

@@ -5,6 +5,9 @@ import style from "./Voting.module.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { ListGroup, ListGroupItem, Placeholder } from "react-bootstrap";
 import VotingResults from "../components/VotingResults";
+import Button from "react-bootstrap/Button";
+import { useMetaMask } from "../hooks/useMetaMask";
+import withAuth from "../components/withAuth";
 
 const Voting = () => {
   const { id } = useParams();
@@ -12,7 +15,11 @@ const Voting = () => {
   const [selectedOption, setSelectedOption] = useState("");
   const [hasVoted, setHasVoted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [winner, setWinner] = useState("");
+  const [winners, setWinners] = useState([]);
+  const [timeleft, setTimeLeft] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const { wallet, hasProvider, isSigning, isConnecting, connectMetaMask } =
+    useMetaMask();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,19 +40,17 @@ const Voting = () => {
         const {
           0: name,
           1: description,
-          2: category,
-          3: options,
-          4: endDate,
-          5: isActive,
-          6: creator,
-          7: resultRevealed,
+          2: options,
+          3: endDate,
+          4: isActive,
+          5: creator,
+          6: resultRevealed,
         } = votingData;
 
         const sessionData = {
           id: sessionId,
           name,
           description,
-          category,
           endDate: Number(endDate),
           isActive,
           creator,
@@ -54,23 +59,36 @@ const Voting = () => {
         };
 
         setVotingSession(sessionData);
-
+        if (sessionData.creator.toLowerCase() === wallet.accounts[0]) {
+          setIsOwner(true);
+        }
         const userHasVoted = await contractInstance.methods
           .hasUserVoted(sessionId, accounts[0])
           .call();
         if (Date.now() >= sessionData.endDate * 1000) {
+          setTimeLeft(true);
           const voteCounts = await contractInstance.methods
             .getVotes(sessionId)
             .call();
 
-          const maxVotesBigInt = voteCounts[1].reduce(
-            (max, vote) => (vote > max ? vote : max),
-            voteCounts[1][0]
+          const maxVotes = Number(
+            voteCounts[1].reduce(
+              (max, vote) => (Number(vote) > max ? Number(vote) : max),
+              Number(voteCounts[1][0])
+            )
           );
-          const winningOptionIndex = voteCounts[1].indexOf(maxVotesBigInt);
-          const winningOption = voteCounts[0][winningOptionIndex];
-          setWinner(winningOption);
+          if (maxVotes !== 0) {
+            const winningOptions = voteCounts[1]
+              .map((vote, index) =>
+                Number(vote) === maxVotes ? voteCounts[0][index] : null
+              )
+              .filter((option) => option !== null);
+            setWinners(winningOptions);
+          } else {
+            setWinners(["Нет голосов"]);
+          }
         }
+
         setHasVoted(userHasVoted);
         setLoading(false);
       } catch (error) {
@@ -103,6 +121,25 @@ const Voting = () => {
     }
   };
 
+  const endVoting = async () => {
+    try {
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      const web3 = new Web3(window.ethereum);
+      const contractInstance = new web3.eth.Contract(
+        VOTING_ABI,
+        VOTING_ADDRESS
+      );
+
+      await contractInstance.methods.endVoting(id).send({ from: accounts[0] });
+      console.log("Сессия голосования успешно отключена!");
+      navigate("/voting");
+    } catch (error) {
+      console.error("Ошибка при отключени сессии голосования", error);
+    }
+  };
+
   if (loading) {
     return (
       <div className={style.main}>
@@ -125,20 +162,23 @@ const Voting = () => {
     <div className={style.main}>
       <div className={style.content}>
         <h2>Голосование: {votingSession.name}</h2>
-
+        {isOwner && (
+          <div style={{ display: "flex", float: "right" }}>
+            <Button variant="outline-danger" onClick={endVoting}>
+              Удалить
+            </Button>
+          </div>
+        )}
         <div key={votingSession.id} className={style.session}>
           <h3>{votingSession.name}</h3>
           <p>
             <b>Описание:</b> {votingSession.description}
           </p>
           <p>
-            <b>Категория:</b> {votingSession.category}
-          </p>
-          <p>
             <b>Дата завершения:</b>{" "}
             {new Date(votingSession.endDate * 1000).toLocaleString()}
           </p>
-          {votingSession.isActive && !hasVoted && (
+          {!timeleft && votingSession.isActive && !hasVoted && (
             <div>
               <label>Выберите вариант:</label>
               <div className={style.list}>
@@ -162,15 +202,47 @@ const Voting = () => {
               </button>
             </div>
           )}
-          {winner ? (
-            <div>
-              <h3>Победитель: {winner}</h3>
-            </div>
-          ) : (
-            <>div</>
-          )}
-          {votingSession.resultRevealed && (
-            <VotingResults sessionId={votingSession.sessionId} />
+
+          {timeleft &&
+            (winners[0] !== "Нет голосов" ? (
+              <div>
+                <h3>
+                  Победитель{winners.length > 1 ? "и" : ""}:{" "}
+                  {winners.join(", ")}
+                </h3>
+
+                <button
+                  style={{
+                    marginBottom: "10px",
+                    marginLeft: "10px",
+                    textDecoration: "underline",
+                  }}
+                  onClick={() => {
+                    navigate("/voting");
+                  }}
+                >
+                  Назад
+                </button>
+              </div>
+            ) : (
+              <div>
+                <h3>Победитель не определился, недостаточно голосов.</h3>{" "}
+                <button
+                  style={{
+                    marginBottom: "10px",
+                    marginLeft: "10px",
+                    textDecoration: "underline",
+                  }}
+                  onClick={() => {
+                    navigate("/voting");
+                  }}
+                >
+                  Назад
+                </button>
+              </div>
+            ))}
+          {!loading && votingSession.resultRevealed && (
+            <VotingResults sessionId={id} />
           )}
           {hasVoted && (
             <div style={{ display: "flex", alignItems: "center" }}>
@@ -197,4 +269,4 @@ const Voting = () => {
   );
 };
 
-export default Voting;
+export default withAuth(Voting);

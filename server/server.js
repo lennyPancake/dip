@@ -7,6 +7,18 @@ var web3 = new Web3("http://127.0.0.1:7545");
 const app = express();
 app.use(cors());
 app.use(express.json());
+const imageDirectory = path.join(__dirname, "/static/images");
+app.use("/static/images", express.static(imageDirectory));
+app.get("/static/images", (req, res) => {
+  fs.readdir(imageDirectory, (err, files) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: "Не удалось получить список изображений" });
+    }
+    res.json(files);
+  });
+});
 
 app.post("/users", (req, res) => {
   const { walletId, userName } = req.body;
