@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 export const VOTING_ADDRESS = "0x4cC8506d0E855a98071Ab809e3AB8E38120ea5c7";
+=======
+export const VOTING_ADDRESS = "0x084b9114303F24dB4596C95522a7700e57Af0Fa3 ";
+>>>>>>> Stashed changes
 
 export const VOTING_ABI = [
   {

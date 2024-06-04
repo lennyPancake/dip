@@ -1,6 +1,6 @@
 import { useMetaMask } from "../../hooks/useMetaMask";
 import styles from "./MetaMaskError.module.css";
-
+import React from "react";
 export const MetaMaskError = () => {
   const { error, errorMessage, clearError } = useMetaMask();
   return (

@@ -18,7 +18,7 @@ const Login = () => {
               через MetaMask.
             </p>
             <button onClick={connectMetaMask} id="connect">
-              Подключить MetaMask кошелек
+              Подключить MetaMask
             </button>
           </section>
         )}

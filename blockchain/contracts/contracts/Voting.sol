@@ -39,7 +39,7 @@ contract Voting {
         _;
     }
 
-    constructor() public {
+    constructor()  {
         owner = msg.sender;
     }
 

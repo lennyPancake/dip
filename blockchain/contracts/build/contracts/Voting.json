@@ -24649,8 +24649,12 @@
     }
   },
   "schemaVersion": "3.4.16",
+<<<<<<< Updated upstream
   "updatedAt": "2024-05-23T16:01:56.927Z",
   "networkType": "ethereum",
+=======
+  "updatedAt": "2024-06-03T19:16:49.199Z",
+>>>>>>> Stashed changes
   "devdoc": {
     "methods": {}
   },

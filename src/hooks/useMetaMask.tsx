@@ -12,7 +12,6 @@ import Web3 from "web3";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Spinner from "react-bootstrap/Spinner";
-import { isCommaListExpression } from "typescript";
 
 interface WalletState {
   accounts: any[];
@@ -47,21 +46,26 @@ const MyVerticallyCenteredModal = (props: any) => {
       {...props}
       aria-labelledby="contained-modal-title-vcenter"
       centered
+<<<<<<< Updated upstream
       data-bs-theme	="dark"
       class="nav-link"
+=======
+      data-bs-theme="dark"
+      className="nav-link"
+>>>>>>> Stashed changes
     >
       <Modal.Header closeButton>
         <Modal.Title id="contained-modal-title-vcenter">
-          MetaMask Connection
+          Подключение MetaMask
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        {props.isConnecting && <p>Connecting to MetaMask, please wait...</p>}
-        {props.isSigning && <p>Signing the message, please wait...</p>}
-        {props.isSuccess && <p>Successfully connected and signed in!</p>}
+        {props.isConnecting && <p>Подключение к кошельку MetaMask.</p>}
+        {props.isSigning && <p>Пожалуйста, подпишите сообщение ...</p>}
+        {props.isSuccess && <p>Успешно подключено.</p>}
         {props.isConnecting && (
           <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
+            <span className="visually-hidden">Загрузка...</span>
           </Spinner>
         )}
       </Modal.Body>
@@ -78,7 +82,6 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
   const [hasProvider, setHasProvider] = useState<boolean | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
-  const [isSigned, setIsSigned] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const clearError = () => setErrorMessage("");
@@ -112,7 +115,55 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
     () => _updateWallet(),
     [_updateWallet]
   );
+<<<<<<< Updated upstream
 
+=======
+
+  const switchToNetwork = async (chainId: string, networkData: any) => {
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId }],
+      });
+    } catch (switchError: any) {
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [networkData],
+          });
+        } catch (addError) {
+          console.error(
+            `Failed to add the network: ${networkData.chainName}`,
+            addError
+          );
+        }
+      } else {
+        console.error(
+          `Failed to switch to the network: ${networkData.chainName}`,
+          switchError
+        );
+      }
+    }
+  };
+
+  const switchToCorrectNetwork = async () => {
+    const sepoliaChainId = "0xaa36a7"; // 11155111 in hexadecimal
+    const sepoliaNetworkData = {
+      chainId: sepoliaChainId,
+      chainName: "Sepolia",
+      rpcUrls: ["https://rpc.sepolia.org"],
+      nativeCurrency: {
+        name: "Sepolia ETH",
+        symbol: "ETH",
+        decimals: 18,
+      },
+    };
+
+    await switchToNetwork(sepoliaChainId, sepoliaNetworkData);
+  };
+
+>>>>>>> Stashed changes
   const updateWallet = useCallback(
     (accounts: any) => _updateWallet(accounts),
     [_updateWallet]
@@ -150,7 +201,6 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
         if (response.ok) {
           setIsSuccess(true);
           setIsSigning(false);
-          setIsSigned(true);
         } else {
           throw new Error("Failed to verify signature");
         }
@@ -165,6 +215,7 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
   };
 
   useEffect(() => {
+    setIsConnecting(true);
     const getProvider = async () => {
       const provider = await detectEthereumProvider({ silent: true });
       setHasProvider(Boolean(provider));
@@ -177,7 +228,7 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
     };
 
     getProvider();
-
+    setIsConnecting(false);
     return () => {
       window.ethereum?.removeListener("accountsChanged", updateWallet);
       window.ethereum?.removeListener("chainChanged", updateWalletAndAccounts);
@@ -193,29 +244,22 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
         method: "eth_requestAccounts",
       });
 
+<<<<<<< Updated upstream
+=======
+      const currentChainId = await window.ethereum.request({
+        method: "eth_chainId",
+      });
+
+      if (currentChainId !== "0xaa36a7") {
+        // 11155111 in hexadecimal
+        await switchToCorrectNetwork();
+      }
+
+>>>>>>> Stashed changes
       clearError();
       updateWallet(accounts);
 
       await handleSignMessage(accounts[0]);
-
-      fetch("http://localhost:5000/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          walletId: accounts[0],
-          userName: null,
-        }),
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Network response was not ok");
-          }
-          return response.json();
-        })
-        .then((data) => console.log("User was added:", data))
-        .catch((error) => console.error("Error:", error));
     } catch (err: any) {
       setErrorMessage(err.message);
     }
@@ -230,8 +274,8 @@ export const MetaMaskContextProvider = ({ children }: PropsWithChildren) => {
         hasProvider,
         error: !!errorMessage,
         errorMessage,
-        isSigning,
         isConnecting,
+        isSigning,
         connectMetaMask,
         clearError,
       }}

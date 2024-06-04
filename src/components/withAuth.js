@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMetaMask } from "../hooks/useMetaMask";
+import Login from "../pages/Login";
 
 const withAuth = (Component) => () => {
   const { wallet, isConnecting, connectMetaMask } = useMetaMask();
@@ -10,8 +11,7 @@ const withAuth = (Component) => () => {
   }
 
   if (!wallet.accounts.length) {
-    navigate("/login");
-    return <div>Необходимо подключить кошелек для доступа к этой странице</div>;
+    return <Login />;
   }
 
   return <Component />;

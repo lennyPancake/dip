@@ -4,7 +4,15 @@ import { VOTING_ABI, VOTING_ADDRESS } from "../config";
 import style from "./Voting.module.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { ListGroup, ListGroupItem, Placeholder } from "react-bootstrap";
+<<<<<<< Updated upstream
 
+=======
+import VotingResults from "../components/VotingResults";
+import Button from "react-bootstrap/Button";
+import { useMetaMask } from "../hooks/useMetaMask";
+import withAuth from "../components/withAuth";
+import { Link } from "react-router-dom";
+>>>>>>> Stashed changes
 const Voting = () => {
   const { id } = useParams();
   const [votingSession, setVotingSession] = useState(null);
@@ -154,11 +162,8 @@ const Voting = () => {
                   marginLeft: "10px",
                   textDecoration: "underline",
                 }}
-                onClick={() => {
-                  navigate("/voting");
-                }}
               >
-                Назад
+                <Link>Назад</Link>
               </button>
             </div>
           )}
