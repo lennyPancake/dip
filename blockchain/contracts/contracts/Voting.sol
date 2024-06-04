@@ -40,17 +40,12 @@ contract Voting {
         require(block.timestamp < votingSessions[_id - 1].endDate, "Voting time has expired");
         _;
     }
-
-<<<<<<< HEAD
-    constructor()  {
-=======
     modifier votingEnded(uint _id) {
         require(block.timestamp >= votingSessions[_id - 1].endDate, "Voting is still active");
         _;
     }
 
-    constructor() public {
->>>>>>> f8cf1929cf13c397d63c64e3cdfd09d9c178be17
+    constructor()  {
         owner = msg.sender;
     }
 
