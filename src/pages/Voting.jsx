@@ -4,7 +4,11 @@ import { VOTING_ABI, VOTING_ADDRESS } from "../config";
 import style from "./Voting.module.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { ListGroup, ListGroupItem, Placeholder } from "react-bootstrap";
+<<<<<<< HEAD
 <<<<<<< Updated upstream
+=======
+import VotingResults from "../components/VotingResults";
+>>>>>>> f8cf1929cf13c397d63c64e3cdfd09d9c178be17
 
 =======
 import VotingResults from "../components/VotingResults";
@@ -19,7 +23,9 @@ const Voting = () => {
   const [selectedOption, setSelectedOption] = useState("");
   const [hasVoted, setHasVoted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [winner, setWinner] = useState("");
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchVotingSession = async () => {
       try {
@@ -43,9 +49,10 @@ const Voting = () => {
           4: endDate,
           5: isActive,
           6: creator,
+          7: resultRevealed,
         } = votingData;
 
-        setVotingSession({
+        const sessionData = {
           id: sessionId,
           name,
           description,
@@ -54,12 +61,28 @@ const Voting = () => {
           isActive,
           creator,
           options,
-        });
+          resultRevealed,
+        };
 
-        const hasVoted = await contractInstance.methods
+        setVotingSession(sessionData);
+
+        const userHasVoted = await contractInstance.methods
           .hasUserVoted(sessionId, accounts[0])
           .call();
-        setHasVoted(hasVoted);
+        if (Date.now() >= sessionData.endDate * 1000) {
+          const voteCounts = await contractInstance.methods
+            .getVotes(sessionId)
+            .call();
+
+          const maxVotesBigInt = voteCounts[1].reduce(
+            (max, vote) => (vote > max ? vote : max),
+            voteCounts[1][0]
+          );
+          const winningOptionIndex = voteCounts[1].indexOf(maxVotesBigInt);
+          const winningOption = voteCounts[0][winningOptionIndex];
+          setWinner(winningOption);
+        }
+        setHasVoted(userHasVoted);
         setLoading(false);
       } catch (error) {
         console.error("Ошибка при получении сессии голосования", error);
@@ -117,7 +140,6 @@ const Voting = () => {
         <div key={votingSession.id} className={style.session}>
           <h3>{votingSession.name}</h3>
           <p>
-            {" "}
             <b>Описание:</b> {votingSession.description}
           </p>
           <p>
@@ -150,6 +172,16 @@ const Voting = () => {
                 Голосовать
               </button>
             </div>
+          )}
+          {winner ? (
+            <div>
+              <h3>Победитель: {winner}</h3>
+            </div>
+          ) : (
+            <>div</>
+          )}
+          {votingSession.resultRevealed && (
+            <VotingResults sessionId={votingSession.sessionId} />
           )}
           {hasVoted && (
             <div style={{ display: "flex", alignItems: "center" }}>
